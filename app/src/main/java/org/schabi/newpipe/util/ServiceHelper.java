@@ -16,13 +16,10 @@ import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 
 import org.schabi.newpipe.R;
-import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.ServiceList;
 import org.schabi.newpipe.extractor.StreamingService;
-import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.services.peertube.PeertubeInstance;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public final class ServiceHelper {
@@ -90,22 +87,12 @@ public final class ServiceHelper {
     }
 
     public static int getSelectedServiceId(final Context context) {
-        return Optional.ofNullable(getSelectedService(context))
-                .orElse(DEFAULT_FALLBACK_SERVICE)
-                .getServiceId();
+        return DEFAULT_FALLBACK_SERVICE.getServiceId();
     }
 
     @Nullable
     public static StreamingService getSelectedService(final Context context) {
-        final String serviceName = PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(context.getString(R.string.current_service_key),
-                        context.getString(R.string.default_service_value));
-
-        try {
-            return NewPipe.getService(serviceName);
-        } catch (final ExtractionException e) {
-            return null;
-        }
+        return DEFAULT_FALLBACK_SERVICE;
     }
 
     @NonNull
@@ -132,14 +119,7 @@ public final class ServiceHelper {
     }
 
     public static void setSelectedServiceId(final Context context, final int serviceId) {
-        String serviceName;
-        try {
-            serviceName = NewPipe.getService(serviceId).getServiceInfo().getName();
-        } catch (final ExtractionException e) {
-            serviceName = DEFAULT_FALLBACK_SERVICE.getServiceInfo().getName();
-        }
-
-        setSelectedServicePreferences(context, serviceName);
+        setSelectedServicePreferences(context, DEFAULT_FALLBACK_SERVICE.getServiceInfo().getName());
     }
 
     private static void setSelectedServicePreferences(final Context context,

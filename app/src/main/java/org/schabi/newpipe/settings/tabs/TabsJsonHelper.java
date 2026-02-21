@@ -19,10 +19,10 @@ public final class TabsJsonHelper {
     private static final String JSON_TABS_ARRAY_KEY = "tabs";
 
     private static final List<Tab> FALLBACK_INITIAL_TABS_LIST = List.of(
-            Tab.Type.DEFAULT_KIOSK.getTab(),
             Tab.Type.FEED.getTab(),
             Tab.Type.SUBSCRIPTIONS.getTab(),
-            Tab.Type.BOOKMARKS.getTab());
+            Tab.Type.BOOKMARKS.getTab(),
+            Tab.Type.HISTORY.getTab());
 
     private TabsJsonHelper() { }
 
@@ -64,7 +64,7 @@ public final class TabsJsonHelper {
 
                 final Tab tab = Tab.from((JsonObject) o);
 
-                if (tab != null) {
+                if (tab != null && !shouldExcludeTab(tab)) {
                     returnTabs.add(tab);
                 }
             }
@@ -103,6 +103,24 @@ public final class TabsJsonHelper {
 
     public static List<Tab> getDefaultTabs() {
         return FALLBACK_INITIAL_TABS_LIST;
+    }
+
+    private static boolean shouldExcludeTab(final Tab tab) {
+        if (tab instanceof Tab.DefaultKioskTab) {
+            return true;
+        }
+
+        if (tab instanceof Tab.KioskTab) {
+            final String kioskId = ((Tab.KioskTab) tab).getKioskId();
+            return "live".equals(kioskId)
+                    || "Trending".equals(kioskId)
+                    || "trending_gaming".equals(kioskId)
+                    || "trending_music".equals(kioskId)
+                    || "trending_movies_and_shows".equals(kioskId)
+                    || "trending_podcasts_episodes".equals(kioskId);
+        }
+
+        return false;
     }
 
     public static final class InvalidJsonException extends Exception {

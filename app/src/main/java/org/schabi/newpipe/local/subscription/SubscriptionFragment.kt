@@ -131,12 +131,9 @@ class SubscriptionFragment : BaseStateFragment<SubscriptionState>() {
         addMenuItemToSubmenu(importSubMenu, R.string.previous_export) { importExportHelper.onImportPreviousSelected() }
             .setIcon(R.drawable.ic_backup)
 
-        for (service in ServiceList.all()) {
-            val subscriptionExtractor = service.subscriptionExtractor ?: continue
-
-            val supportedSources = subscriptionExtractor.supportedSources
-            if (supportedSources.isEmpty()) continue
-
+        val service = ServiceList.YouTube
+        val subscriptionExtractor = service.subscriptionExtractor
+        if (subscriptionExtractor != null && subscriptionExtractor.supportedSources.isNotEmpty()) {
             addMenuItemToSubmenu(importSubMenu, service.serviceInfo.name) {
                 onImportFromServiceSelected(service.serviceId)
             }

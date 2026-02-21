@@ -89,7 +89,6 @@ import org.schabi.newpipe.util.SerializedCache;
 import org.schabi.newpipe.util.ServiceHelper;
 import org.schabi.newpipe.util.StateSaver;
 import org.schabi.newpipe.util.ThemeHelper;
-import org.schabi.newpipe.util.external_communication.ShareUtils;
 import org.schabi.newpipe.views.FocusOverlayView;
 
 import java.util.ArrayList;
@@ -118,8 +117,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int ITEM_ID_DOWNLOADS = -4;
     private static final int ITEM_ID_HISTORY = -5;
     private static final int ITEM_ID_SETTINGS = 0;
-    private static final int ITEM_ID_DONATION = 1;
-    private static final int ITEM_ID_ABOUT = 2;
+    private static final int ITEM_ID_ABOUT = 1;
 
     private static final int ORDER = 0;
     public static final String KEY_IS_IN_BACKGROUND = "is_in_background";
@@ -284,6 +282,9 @@ public class MainActivity extends AppCompatActivity {
         int kioskMenuItemId = 0;
 
         for (final String ks : service.getKioskList().getAvailableKiosks()) {
+            if (isHiddenKioskInDrawer(ks)) {
+                continue;
+            }
             drawerLayoutBinding.navigation.getMenu()
                     .add(R.id.menu_kiosks_group, kioskMenuItemId, 0, KioskTranslator
                             .getTranslatedKioskName(ks, this))
@@ -295,10 +296,6 @@ public class MainActivity extends AppCompatActivity {
         drawerLayoutBinding.navigation.getMenu()
                 .add(R.id.menu_options_about_group, ITEM_ID_SETTINGS, ORDER, R.string.settings)
                 .setIcon(R.drawable.ic_settings);
-        drawerLayoutBinding.navigation.getMenu()
-                .add(R.id.menu_options_about_group, ITEM_ID_DONATION, ORDER,
-                        R.string.donation_title)
-                .setIcon(R.drawable.volunteer_activism_ic);
         drawerLayoutBinding.navigation.getMenu()
                 .add(R.id.menu_options_about_group, ITEM_ID_ABOUT, ORDER, R.string.tab_about)
                 .setIcon(R.drawable.ic_info_outline);
@@ -364,6 +361,9 @@ public class MainActivity extends AppCompatActivity {
         final StreamingService currentService = ServiceHelper.getSelectedService(this);
         int kioskMenuItemId = 0;
         for (final String kioskId : currentService.getKioskList().getAvailableKiosks()) {
+            if (isHiddenKioskInDrawer(kioskId)) {
+                continue;
+            }
             if (kioskMenuItemId == item.getItemId()) {
                 NavigationHelper.openKioskFragment(getSupportFragmentManager(),
                         currentService.getServiceId(), kioskId);
@@ -378,17 +378,26 @@ public class MainActivity extends AppCompatActivity {
             case ITEM_ID_SETTINGS:
                 NavigationHelper.openSettings(this);
                 break;
-            case ITEM_ID_DONATION:
-                ShareUtils.openUrlInBrowser(this, getString(R.string.donation_url));
-                break;
             case ITEM_ID_ABOUT:
                 NavigationHelper.openAbout(this);
                 break;
         }
     }
 
+    private boolean isHiddenKioskInDrawer(final String kioskId) {
+        return "Trending".equals(kioskId)
+                || "trending_gaming".equals(kioskId)
+                || "trending_music".equals(kioskId)
+                || "trending_movies_and_shows".equals(kioskId)
+                || "trending_podcasts_episodes".equals(kioskId)
+                || "live".equals(kioskId);
+    }
+
     private void setupDrawerHeader() {
-        drawerHeaderBinding.drawerHeaderActionButton.setOnClickListener(view -> toggleServices());
+        // YouTube-only fork: disable service switch in drawer header.
+        drawerHeaderBinding.drawerHeaderActionButton.setOnClickListener(null);
+        drawerHeaderBinding.drawerHeaderActionButton.setEnabled(false);
+        drawerHeaderBinding.drawerArrow.setVisibility(View.GONE);
 
         // If the current app name is bigger than the default "NewPipe" (7 chars),
         // let the text view grow a little more as well.
@@ -429,18 +438,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showServices() {
-        for (final StreamingService s : NewPipe.getServices()) {
-            final String title = s.getServiceInfo().getName();
-
-            final MenuItem menuItem = drawerLayoutBinding.navigation.getMenu()
-                    .add(R.id.menu_services_group, s.getServiceId(), ORDER, title)
-                    .setIcon(ServiceHelper.getIcon(s.getServiceId()));
-
-            // peertube specifics
-            if (s.getServiceId() == 3) {
-                enhancePeertubeMenu(menuItem);
-            }
+        final StreamingService service = ServiceHelper.getSelectedService(this);
+        if (service == null) {
+            return;
         }
+
+        drawerLayoutBinding.navigation.getMenu()
+                .add(R.id.menu_services_group, service.getServiceId(), ORDER,
+                        service.getServiceInfo().getName())
+                .setIcon(ServiceHelper.getIcon(service.getServiceId()));
         drawerLayoutBinding.navigation.getMenu()
                 .getItem(ServiceHelper.getSelectedServiceId(this))
                 .setChecked(true);
@@ -522,7 +528,7 @@ public class MainActivity extends AppCompatActivity {
             drawerHeaderBinding.drawerHeaderServiceView.post(() -> drawerHeaderBinding
                     .drawerHeaderServiceView.setSelected(true));
             drawerHeaderBinding.drawerHeaderActionButton.setContentDescription(
-                    getString(R.string.drawer_header_description) + selectedServiceName);
+                    selectedServiceName);
         } catch (final Exception e) {
             ErrorUtil.showUiErrorSnackbar(this, "Setting up service toggle", e);
         }

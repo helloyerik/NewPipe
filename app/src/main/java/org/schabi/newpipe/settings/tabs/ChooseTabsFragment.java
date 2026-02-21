@@ -242,11 +242,8 @@ public class ChooseTabsFragment extends Fragment {
                             tab.getTabIconRes(context)));
                     break;
                 case DEFAULT_KIOSK:
-                    if (!tabList.contains(tab)) {
-                        returnList.add(new ChooseTabListItem(tab.getTabId(),
-                                getString(R.string.default_kiosk_page_summary),
-                                R.drawable.ic_whatshot));
-                    }
+                    // YouTube-only fork: do not expose default kiosk page because it resolves
+                    // to the "live" kiosk.
                     break;
                 case PLAYLIST:
                     returnList.add(new ChooseTabListItem(tab.getTabId(),
