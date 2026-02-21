@@ -22,6 +22,7 @@ import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.local.subscription.SubscriptionManager;
 import org.schabi.newpipe.ui.emptystate.EmptyStateSpec;
 import org.schabi.newpipe.ui.emptystate.EmptyStateUtil;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.ThemeHelper;
 import org.schabi.newpipe.util.image.CoilHelper;
 
@@ -153,7 +154,13 @@ public class SelectChannelFragment extends DialogFragment {
 
             @Override
             public void onNext(@NonNull final List<SubscriptionEntity> newSubscriptions) {
-                displayChannels(newSubscriptions);
+                final List<SubscriptionEntity> filteredSubscriptions = new Vector<>();
+                for (final SubscriptionEntity subscription : newSubscriptions) {
+                    if (ForkContentPolicy.isAllowedService(subscription.getServiceId())) {
+                        filteredSubscriptions.add(subscription);
+                    }
+                }
+                displayChannels(filteredSubscriptions);
             }
 
             @Override

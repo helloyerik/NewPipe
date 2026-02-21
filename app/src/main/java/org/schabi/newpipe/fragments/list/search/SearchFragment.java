@@ -204,6 +204,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
     @Override
     public void onAttach(@NonNull final Context context) {
         super.onAttach(context);
+        infoListAdapter.setStreamListLayoutId(R.layout.list_stream_search_vertical_item);
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         showLocalSuggestions = NewPipeSettings.showLocalSearchSuggestions(activity, prefs);

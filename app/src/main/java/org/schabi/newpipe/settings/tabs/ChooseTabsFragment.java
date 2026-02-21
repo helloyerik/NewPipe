@@ -36,6 +36,7 @@ import org.schabi.newpipe.settings.SelectKioskFragment;
 import org.schabi.newpipe.settings.SelectPlaylistFragment;
 import org.schabi.newpipe.settings.SelectFeedGroupFragment;
 import org.schabi.newpipe.settings.tabs.AddTabDialog.ChooseTabListItem;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.ThemeHelper;
 
 import java.util.ArrayList;
@@ -175,16 +176,25 @@ public class ChooseTabsFragment extends Fragment {
         }
 
         switch (type) {
+            case FEED:
+                // YouTube-only fork: "What's New" (feed) page is disabled.
+                return;
             case KIOSK:
                 final SelectKioskFragment selectKioskFragment = new SelectKioskFragment();
-                selectKioskFragment.setOnSelectedListener((serviceId, kioskId, kioskName) ->
-                        addTab(new Tab.KioskTab(serviceId, kioskId)));
+                selectKioskFragment.setOnSelectedListener((serviceId, kioskId, kioskName) -> {
+                    if (ForkContentPolicy.isAllowedKiosk(serviceId, kioskId)) {
+                        addTab(new Tab.KioskTab(serviceId, kioskId));
+                    }
+                });
                 selectKioskFragment.show(getParentFragmentManager(), "select_kiosk");
                 return;
             case CHANNEL:
                 final SelectChannelFragment selectChannelFragment = new SelectChannelFragment();
-                selectChannelFragment.setOnSelectedListener((serviceId, url, name) ->
-                        addTab(new Tab.ChannelTab(serviceId, url, name)));
+                selectChannelFragment.setOnSelectedListener((serviceId, url, name) -> {
+                    if (ForkContentPolicy.isAllowedService(serviceId)) {
+                        addTab(new Tab.ChannelTab(serviceId, url, name));
+                    }
+                });
                 selectChannelFragment.show(getParentFragmentManager(), "select_channel");
                 return;
             case PLAYLIST:
@@ -199,7 +209,9 @@ public class ChooseTabsFragment extends Fragment {
                             @Override
                             public void onRemotePlaylistSelected(
                                     final int serviceId, final String url, final String name) {
-                                addTab(new Tab.PlaylistTab(serviceId, url, name));
+                                if (ForkContentPolicy.isAllowedService(serviceId)) {
+                                    addTab(new Tab.PlaylistTab(serviceId, url, name));
+                                }
                             }
                         });
                 selectPlaylistFragment.show(getParentFragmentManager(), "select_playlist");
@@ -244,6 +256,9 @@ public class ChooseTabsFragment extends Fragment {
                 case DEFAULT_KIOSK:
                     // YouTube-only fork: do not expose default kiosk page because it resolves
                     // to the "live" kiosk.
+                    break;
+                case FEED:
+                    // YouTube-only fork: do not expose "What's New" (feed) page.
                     break;
                 case PLAYLIST:
                     returnList.add(new ChooseTabListItem(tab.getTabId(),

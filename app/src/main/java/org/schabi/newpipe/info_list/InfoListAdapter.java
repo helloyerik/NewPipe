@@ -6,11 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.schabi.newpipe.R;
 import org.schabi.newpipe.databinding.PignateFooterBinding;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
@@ -88,6 +90,7 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private boolean showFooter = false;
 
     private ItemViewMode itemMode = ItemViewMode.LIST;
+    private int streamListLayoutId = R.layout.list_stream_item;
 
     private Supplier<View> headerSupplier = null;
 
@@ -120,6 +123,10 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public void setItemViewMode(final ItemViewMode itemViewMode) {
         this.itemMode = itemViewMode;
+    }
+
+    public void setStreamListLayoutId(@LayoutRes final int layoutId) {
+        this.streamListLayoutId = layoutId;
     }
 
     public void addInfoItemList(@Nullable final List<? extends InfoItem> data) {
@@ -292,7 +299,8 @@ public class InfoListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     .getRoot()
             );
             case MINI_STREAM_HOLDER_TYPE -> new StreamMiniInfoItemHolder(infoItemBuilder, parent);
-            case STREAM_HOLDER_TYPE -> new StreamInfoItemHolder(infoItemBuilder, parent);
+            case STREAM_HOLDER_TYPE ->
+                    new StreamInfoItemHolder(infoItemBuilder, streamListLayoutId, parent);
             case GRID_STREAM_HOLDER_TYPE -> new StreamGridInfoItemHolder(infoItemBuilder, parent);
             case CARD_STREAM_HOLDER_TYPE -> new StreamCardInfoItemHolder(infoItemBuilder, parent);
             case MINI_CHANNEL_HOLDER_TYPE -> new ChannelMiniInfoItemHolder(infoItemBuilder, parent);

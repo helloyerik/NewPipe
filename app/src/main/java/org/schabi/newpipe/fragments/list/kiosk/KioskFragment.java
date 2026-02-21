@@ -28,6 +28,7 @@ import org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCLiveSt
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.fragments.list.BaseListInfoFragment;
 import org.schabi.newpipe.util.ExtractorHelper;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.Localization;
 
@@ -69,12 +70,18 @@ public class KioskFragment extends BaseListInfoFragment<StreamInfoItem, KioskInf
     //////////////////////////////////////////////////////////////////////////*/
 
     public static KioskFragment getInstance(final int serviceId) throws ExtractionException {
-        return getInstance(serviceId, NewPipe.getService(serviceId)
-                .getKioskList().getDefaultKioskId());
+        final String defaultKioskId = NewPipe.getService(serviceId)
+                .getKioskList()
+                .getDefaultKioskId();
+        return getInstance(serviceId, defaultKioskId);
     }
 
     public static KioskFragment getInstance(final int serviceId, final String kioskId)
             throws ExtractionException {
+        if (!ForkContentPolicy.isAllowedKiosk(serviceId, kioskId)) {
+            throw new ExtractionException("Kiosk is disabled in this fork: service="
+                    + serviceId + ", kioskId=" + kioskId);
+        }
         final KioskFragment instance = new KioskFragment();
         final StreamingService service = NewPipe.getService(serviceId);
         final ListLinkHandlerFactory kioskLinkHandlerFactory = service.getKioskList()

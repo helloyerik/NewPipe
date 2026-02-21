@@ -74,6 +74,7 @@ import org.schabi.newpipe.util.ChannelTabHelper;
 import org.schabi.newpipe.util.Constants;
 import org.schabi.newpipe.util.DeviceUtils;
 import org.schabi.newpipe.util.ExtractorHelper;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.NavigationHelper;
 import org.schabi.newpipe.util.PermissionHelper;
 import org.schabi.newpipe.util.ThemeHelper;
@@ -232,6 +233,10 @@ public class RouterActivity extends AppCompatActivity {
                             currentUrl = url;
                         } else {
                             currentService = NewPipe.getService(currentServiceId);
+                        }
+
+                        if (!ForkContentPolicy.isAllowedService(currentServiceId)) {
+                            return false;
                         }
 
                         // return whether the url was found to be supported or not

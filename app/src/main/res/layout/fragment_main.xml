@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:visibility="gone"
         android:background="?attr/colorPrimary"
         app:tabRippleColor="@color/white"
         app:tabIconTint="@color/white"

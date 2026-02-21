@@ -27,20 +27,15 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
-import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -59,13 +54,11 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import org.schabi.newpipe.databinding.ActivityMainBinding;
 import org.schabi.newpipe.databinding.DrawerHeaderBinding;
 import org.schabi.newpipe.databinding.DrawerLayoutBinding;
-import org.schabi.newpipe.databinding.InstanceSpinnerLayoutBinding;
 import org.schabi.newpipe.databinding.ToolbarLayoutBinding;
 import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
-import org.schabi.newpipe.extractor.services.peertube.PeertubeInstance;
 import org.schabi.newpipe.fragments.BackPressable;
 import org.schabi.newpipe.fragments.MainFragment;
 import org.schabi.newpipe.fragments.detail.VideoDetailFragment;
@@ -79,10 +72,10 @@ import org.schabi.newpipe.settings.UpdateSettingsFragment;
 import org.schabi.newpipe.settings.migration.MigrationManager;
 import org.schabi.newpipe.util.Constants;
 import org.schabi.newpipe.util.DeviceUtils;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.Localization;
 import org.schabi.newpipe.util.NavigationHelper;
-import org.schabi.newpipe.util.PeertubeHelper;
 import org.schabi.newpipe.util.PermissionHelper;
 import org.schabi.newpipe.util.ReleaseVersionUtil;
 import org.schabi.newpipe.util.SerializedCache;
@@ -91,8 +84,6 @@ import org.schabi.newpipe.util.StateSaver;
 import org.schabi.newpipe.util.ThemeHelper;
 import org.schabi.newpipe.views.FocusOverlayView;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -107,12 +98,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ActionBarDrawerToggle toggle;
 
-    private boolean servicesShown = false;
-
     private BroadcastReceiver broadcastReceiver;
 
     private static final int ITEM_ID_SUBSCRIPTIONS = -1;
-    private static final int ITEM_ID_FEED = -2;
     private static final int ITEM_ID_BOOKMARKS = -3;
     private static final int ITEM_ID_DOWNLOADS = -4;
     private static final int ITEM_ID_HISTORY = -5;
@@ -238,9 +226,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDrawerClosed(final View drawerView) {
-                if (servicesShown) {
-                    toggleServices();
-                }
                 if (lastService != ServiceHelper.getSelectedServiceId(MainActivity.this)) {
                     ActivityCompat.recreate(MainActivity.this);
                 }
@@ -262,9 +247,6 @@ public class MainActivity extends AppCompatActivity {
                 .add(R.id.menu_tabs_group, ITEM_ID_SUBSCRIPTIONS, ORDER,
                         R.string.tab_subscriptions)
                 .setIcon(R.drawable.ic_tv);
-        drawerLayoutBinding.navigation.getMenu()
-                .add(R.id.menu_tabs_group, ITEM_ID_FEED, ORDER, R.string.fragment_feed_title)
-                .setIcon(R.drawable.ic_subscriptions);
         drawerLayoutBinding.navigation.getMenu()
                 .add(R.id.menu_tabs_group, ITEM_ID_BOOKMARKS, ORDER, R.string.tab_bookmarks)
                 .setIcon(R.drawable.ic_bookmark);
@@ -303,9 +285,6 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean drawerItemSelected(final MenuItem item) {
         switch (item.getGroupId()) {
-            case R.id.menu_services_group:
-                changeService(item);
-                break;
             case R.id.menu_tabs_group:
                 tabSelected(item);
                 break;
@@ -327,23 +306,10 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void changeService(final MenuItem item) {
-        drawerLayoutBinding.navigation.getMenu()
-                .getItem(ServiceHelper.getSelectedServiceId(this))
-                .setChecked(false);
-        ServiceHelper.setSelectedServiceId(this, item.getItemId());
-        drawerLayoutBinding.navigation.getMenu()
-                .getItem(ServiceHelper.getSelectedServiceId(this))
-                .setChecked(true);
-    }
-
     private void tabSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case ITEM_ID_SUBSCRIPTIONS:
                 NavigationHelper.openSubscriptionFragment(getSupportFragmentManager());
-                break;
-            case ITEM_ID_FEED:
-                NavigationHelper.openFeedFragment(getSupportFragmentManager());
                 break;
             case ITEM_ID_BOOKMARKS:
                 NavigationHelper.openBookmarksFragment(getSupportFragmentManager());
@@ -385,12 +351,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isHiddenKioskInDrawer(final String kioskId) {
-        return "Trending".equals(kioskId)
-                || "trending_gaming".equals(kioskId)
-                || "trending_music".equals(kioskId)
-                || "trending_movies_and_shows".equals(kioskId)
-                || "trending_podcasts_episodes".equals(kioskId)
-                || "live".equals(kioskId);
+        return ForkContentPolicy.isRemovedKiosk(kioskId);
     }
 
     private void setupDrawerHeader() {
@@ -412,89 +373,6 @@ public class MainActivity extends AppCompatActivity {
             drawerHeaderBinding.drawerHeaderNewpipeTitle.setMaxWidth(getResources()
                     .getDimensionPixelSize(R.dimen.drawer_header_newpipe_title_max_width));
         }
-    }
-
-    private void toggleServices() {
-        servicesShown = !servicesShown;
-
-        drawerLayoutBinding.navigation.getMenu().removeGroup(R.id.menu_services_group);
-        drawerLayoutBinding.navigation.getMenu().removeGroup(R.id.menu_tabs_group);
-        drawerLayoutBinding.navigation.getMenu().removeGroup(R.id.menu_kiosks_group);
-        drawerLayoutBinding.navigation.getMenu().removeGroup(R.id.menu_options_about_group);
-
-        // Show up or down arrow
-        drawerHeaderBinding.drawerArrow.setImageResource(
-                servicesShown ? R.drawable.ic_arrow_drop_up : R.drawable.ic_arrow_drop_down);
-
-        if (servicesShown) {
-            showServices();
-        } else {
-            try {
-                addDrawerMenuForCurrentService();
-            } catch (final Exception e) {
-                ErrorUtil.showUiErrorSnackbar(this, "Showing main page tabs", e);
-            }
-        }
-    }
-
-    private void showServices() {
-        final StreamingService service = ServiceHelper.getSelectedService(this);
-        if (service == null) {
-            return;
-        }
-
-        drawerLayoutBinding.navigation.getMenu()
-                .add(R.id.menu_services_group, service.getServiceId(), ORDER,
-                        service.getServiceInfo().getName())
-                .setIcon(ServiceHelper.getIcon(service.getServiceId()));
-        drawerLayoutBinding.navigation.getMenu()
-                .getItem(ServiceHelper.getSelectedServiceId(this))
-                .setChecked(true);
-    }
-
-    private void enhancePeertubeMenu(final MenuItem menuItem) {
-        final PeertubeInstance currentInstance = PeertubeHelper.getCurrentInstance();
-        menuItem.setTitle(currentInstance.getName());
-        final Spinner spinner = InstanceSpinnerLayoutBinding.inflate(LayoutInflater.from(this))
-                .getRoot();
-        final List<PeertubeInstance> instances = PeertubeHelper.getInstanceList(this);
-        final List<String> items = new ArrayList<>();
-        int defaultSelect = 0;
-        for (final PeertubeInstance instance : instances) {
-            items.add(instance.getName());
-            if (instance.getUrl().equals(currentInstance.getUrl())) {
-                defaultSelect = items.size() - 1;
-            }
-        }
-        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                R.layout.instance_spinner_item, items);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        spinner.setSelection(defaultSelect, false);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(final AdapterView<?> parent, final View view,
-                                       final int position, final long id) {
-                final PeertubeInstance newInstance = instances.get(position);
-                if (newInstance.getUrl().equals(PeertubeHelper.getCurrentInstance().getUrl())) {
-                    return;
-                }
-                PeertubeHelper.selectInstance(newInstance, getApplicationContext());
-                changeService(menuItem);
-                mainBinding.getRoot().closeDrawers();
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    getSupportFragmentManager().popBackStack(null,
-                            FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                    ActivityCompat.recreate(MainActivity.this);
-                }, 300);
-            }
-
-            @Override
-            public void onNothingSelected(final AdapterView<?> parent) {
-
-            }
-        });
-        menuItem.setActionView(spinner);
     }
 
     @Override
@@ -790,6 +668,11 @@ public class MainActivity extends AppCompatActivity {
             if (intent.hasExtra(Constants.KEY_LINK_TYPE)) {
                 final String url = intent.getStringExtra(Constants.KEY_URL);
                 final int serviceId = intent.getIntExtra(Constants.KEY_SERVICE_ID, 0);
+                if (!ForkContentPolicy.isAllowedService(serviceId)) {
+                    Toast.makeText(this, R.string.unsupported_url, Toast.LENGTH_SHORT).show();
+                    NavigationHelper.gotoMainFragment(getSupportFragmentManager());
+                    return;
+                }
                 String title = intent.getStringExtra(Constants.KEY_TITLE);
                 if (title == null) {
                     title = "";
@@ -828,9 +711,12 @@ public class MainActivity extends AppCompatActivity {
                     searchString = "";
                 }
                 final int serviceId = intent.getIntExtra(Constants.KEY_SERVICE_ID, 0);
+                final int targetServiceId = ForkContentPolicy.isAllowedService(serviceId)
+                        ? serviceId
+                        : ForkContentPolicy.getAllowedServiceId();
                 NavigationHelper.openSearchFragment(
                         getSupportFragmentManager(),
-                        serviceId,
+                        targetServiceId,
                         searchString);
 
             } else {

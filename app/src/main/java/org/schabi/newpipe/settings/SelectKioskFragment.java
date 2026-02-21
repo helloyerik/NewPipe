@@ -18,6 +18,7 @@ import org.schabi.newpipe.R;
 import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.extractor.ServiceList;
 import org.schabi.newpipe.extractor.StreamingService;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.ServiceHelper;
 import org.schabi.newpipe.util.ThemeHelper;
@@ -119,12 +120,7 @@ public class SelectKioskFragment extends DialogFragment {
         }
 
         private boolean isHiddenKiosk(final String kioskId) {
-            return "Trending".equals(kioskId)
-                    || "trending_gaming".equals(kioskId)
-                    || "trending_music".equals(kioskId)
-                    || "trending_movies_and_shows".equals(kioskId)
-                    || "trending_podcasts_episodes".equals(kioskId)
-                    || "live".equals(kioskId);
+            return ForkContentPolicy.isRemovedKiosk(kioskId);
         }
 
         public int getItemCount() {

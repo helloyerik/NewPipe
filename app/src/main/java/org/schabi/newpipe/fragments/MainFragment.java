@@ -108,6 +108,7 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
 
         binding.mainTabLayout.setupWithViewPager(binding.pager);
         binding.mainTabLayout.addOnTabSelectedListener(this);
+        hideMainTabLayout();
 
         setupTabs();
         updateTabLayoutPosition();
@@ -225,6 +226,10 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
     }
 
     private void updateTabLayoutPosition() {
+        if (binding.mainTabLayout.getVisibility() != View.VISIBLE) {
+            return;
+        }
+
         final ScrollableTabLayout tabLayout = binding.mainTabLayout;
         final ViewPager viewPager = binding.pager;
         final boolean bottom = mainTabsPositionBottom;
@@ -254,6 +259,18 @@ public class MainFragment extends BaseFragment implements TabLayout.OnTabSelecte
         tabLayout.setTabRippleColor(ColorStateList.valueOf(iconColor).withAlpha(32));
         tabLayout.setTabIconTint(ColorStateList.valueOf(iconColor));
         tabLayout.setSelectedTabIndicatorColor(iconColor);
+    }
+
+    private void hideMainTabLayout() {
+        binding.mainTabLayout.setVisibility(View.GONE);
+
+        final RelativeLayout.LayoutParams pagerParams =
+                (RelativeLayout.LayoutParams) binding.pager.getLayoutParams();
+        pagerParams.removeRule(BELOW);
+        pagerParams.removeRule(ABOVE);
+        pagerParams.addRule(ALIGN_PARENT_TOP);
+        pagerParams.addRule(ALIGN_PARENT_BOTTOM);
+        binding.pager.setLayoutParams(pagerParams);
     }
 
     @Override

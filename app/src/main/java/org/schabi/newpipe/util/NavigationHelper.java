@@ -379,8 +379,10 @@ public final class NavigationHelper {
 
     public static void openSearchFragment(final FragmentManager fragmentManager,
                                           final int serviceId, final String searchString) {
+        final int targetServiceId = sanitizeServiceId(serviceId);
         defaultTransaction(fragmentManager)
-                .replace(R.id.fragment_holder, SearchFragment.getInstance(serviceId, searchString))
+                .replace(R.id.fragment_holder,
+                        SearchFragment.getInstance(targetServiceId, searchString))
                 .addToBackStack(SEARCH_FRAGMENT_TAG)
                 .commit();
     }
@@ -412,6 +414,10 @@ public final class NavigationHelper {
                                                @NonNull final String title,
                                                @Nullable final PlayQueue playQueue,
                                                final boolean switchingPlayers) {
+        if (!ForkContentPolicy.isAllowedService(serviceId)) {
+            Toast.makeText(context, R.string.unsupported_url, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         final boolean autoPlay;
         @Nullable final PlayerType playerType = PlayerHolder.INSTANCE.getType();
@@ -466,6 +472,9 @@ public final class NavigationHelper {
     public static void openChannelFragment(final FragmentManager fragmentManager,
                                            final int serviceId, final String url,
                                            @NonNull final String name) {
+        if (!ForkContentPolicy.isAllowedService(serviceId)) {
+            return;
+        }
         defaultTransaction(fragmentManager)
                 .replace(R.id.fragment_holder, ChannelFragment.getInstance(serviceId, url, name))
                 .addToBackStack(null)
@@ -504,6 +513,9 @@ public final class NavigationHelper {
     public static void openPlaylistFragment(final FragmentManager fragmentManager,
                                             final int serviceId, final String url,
                                             @NonNull final String name) {
+        if (!ForkContentPolicy.isAllowedService(serviceId)) {
+            return;
+        }
         defaultTransaction(fragmentManager)
                 .replace(R.id.fragment_holder, PlaylistFragment.getInstance(serviceId, url, name))
                 .addToBackStack(null)
@@ -538,6 +550,10 @@ public final class NavigationHelper {
 
     public static void openKioskFragment(final FragmentManager fragmentManager, final int serviceId,
                                          final String kioskId) throws ExtractionException {
+        if (!ForkContentPolicy.isAllowedKiosk(serviceId, kioskId)) {
+            throw new ExtractionException("Kiosk is disabled in this fork: service="
+                    + serviceId + ", kioskId=" + kioskId);
+        }
         defaultTransaction(fragmentManager)
                 .replace(R.id.fragment_holder, KioskFragment.getInstance(serviceId, kioskId))
                 .addToBackStack(null)
@@ -575,7 +591,7 @@ public final class NavigationHelper {
     public static void openSearch(final Context context, final int serviceId,
                                   final String searchString) {
         final Intent mIntent = new Intent(context, MainActivity.class);
-        mIntent.putExtra(Constants.KEY_SERVICE_ID, serviceId);
+        mIntent.putExtra(Constants.KEY_SERVICE_ID, sanitizeServiceId(serviceId));
         mIntent.putExtra(Constants.KEY_SEARCH_STRING, searchString);
         mIntent.putExtra(Constants.KEY_OPEN_SEARCH, true);
         context.startActivity(mIntent);
@@ -677,7 +693,7 @@ public final class NavigationHelper {
     private static Intent getOpenIntent(final Context context, final String url,
                                         final int serviceId, final StreamingService.LinkType type) {
         final Intent mIntent = new Intent(context, MainActivity.class);
-        mIntent.putExtra(Constants.KEY_SERVICE_ID, serviceId);
+        mIntent.putExtra(Constants.KEY_SERVICE_ID, sanitizeServiceId(serviceId));
         mIntent.putExtra(Constants.KEY_URL, url);
         mIntent.putExtra(Constants.KEY_LINK_TYPE, type);
         return mIntent;
@@ -685,12 +701,21 @@ public final class NavigationHelper {
 
     public static Intent getIntentByLink(final Context context, final String url)
             throws ExtractionException {
-        return getIntentByLink(context, NewPipe.getServiceByUrl(url), url);
+        final StreamingService service = NewPipe.getServiceByUrl(url);
+        if (!ForkContentPolicy.isAllowedService(service.getServiceId())) {
+            throw new ExtractionException("Service is disabled in this fork: "
+                    + service.getServiceInfo().getName());
+        }
+        return getIntentByLink(context, service, url);
     }
 
     public static Intent getIntentByLink(final Context context,
                                          final StreamingService service,
                                          final String url) throws ExtractionException {
+        if (!ForkContentPolicy.isAllowedService(service.getServiceId())) {
+            throw new ExtractionException("Service is disabled in this fork: "
+                    + service.getServiceInfo().getName());
+        }
         final StreamingService.LinkType linkType = service.getLinkTypeByUrl(url);
 
         if (linkType == StreamingService.LinkType.NONE) {
@@ -726,5 +751,11 @@ public final class NavigationHelper {
         NewPipeDatabase.close();
 
         ProcessPhoenix.triggerRebirth(activity.getApplicationContext());
+    }
+
+    private static int sanitizeServiceId(final int serviceId) {
+        return ForkContentPolicy.isAllowedService(serviceId)
+                ? serviceId
+                : ForkContentPolicy.getAllowedServiceId();
     }
 }

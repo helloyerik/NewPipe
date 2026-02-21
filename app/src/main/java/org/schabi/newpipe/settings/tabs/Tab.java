@@ -28,6 +28,7 @@ import org.schabi.newpipe.local.feed.FeedFragment;
 import org.schabi.newpipe.local.history.StatisticsPlaylistFragment;
 import org.schabi.newpipe.local.playlist.LocalPlaylistFragment;
 import org.schabi.newpipe.local.subscription.SubscriptionFragment;
+import org.schabi.newpipe.util.ForkContentPolicy;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.ServiceHelper;
 
@@ -354,6 +355,10 @@ public abstract class Tab {
 
         @Override
         public KioskFragment getFragment(final Context context) throws ExtractionException {
+            if (!ForkContentPolicy.isAllowedKiosk(kioskServiceId, kioskId)) {
+                throw new ExtractionException("Kiosk is disabled in this fork: service="
+                        + kioskServiceId + ", kioskId=" + kioskId);
+            }
             return KioskFragment.getInstance(kioskServiceId, kioskId);
         }
 

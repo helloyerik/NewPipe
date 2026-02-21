@@ -9,6 +9,8 @@ import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonStringWriter;
 import com.grack.nanojson.JsonWriter;
 
+import org.schabi.newpipe.util.ForkContentPolicy;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,6 @@ public final class TabsJsonHelper {
     private static final String JSON_TABS_ARRAY_KEY = "tabs";
 
     private static final List<Tab> FALLBACK_INITIAL_TABS_LIST = List.of(
-            Tab.Type.FEED.getTab(),
             Tab.Type.SUBSCRIPTIONS.getTab(),
             Tab.Type.BOOKMARKS.getTab(),
             Tab.Type.HISTORY.getTab());
@@ -76,7 +77,7 @@ public final class TabsJsonHelper {
             return getDefaultTabs();
         }
 
-        return returnTabs;
+        return ensureSubscriptionsFirst(returnTabs);
     }
 
     /**
@@ -105,19 +106,48 @@ public final class TabsJsonHelper {
         return FALLBACK_INITIAL_TABS_LIST;
     }
 
+    private static List<Tab> ensureSubscriptionsFirst(final List<Tab> tabs) {
+        final List<Tab> normalizedTabs = new ArrayList<>(tabs);
+        final Tab subscriptionsTab = Tab.Type.SUBSCRIPTIONS.getTab();
+        final int subscriptionsIndex = normalizedTabs.indexOf(subscriptionsTab);
+
+        if (subscriptionsIndex > 0) {
+            normalizedTabs.remove(subscriptionsIndex);
+            normalizedTabs.add(0, subscriptionsTab);
+        } else if (subscriptionsIndex < 0) {
+            normalizedTabs.add(0, subscriptionsTab);
+        }
+
+        return normalizedTabs;
+    }
+
     private static boolean shouldExcludeTab(final Tab tab) {
+        if (tab instanceof Tab.FeedTab) {
+            return true;
+        }
+
         if (tab instanceof Tab.DefaultKioskTab) {
             return true;
         }
 
         if (tab instanceof Tab.KioskTab) {
-            final String kioskId = ((Tab.KioskTab) tab).getKioskId();
-            return "live".equals(kioskId)
-                    || "Trending".equals(kioskId)
-                    || "trending_gaming".equals(kioskId)
-                    || "trending_music".equals(kioskId)
-                    || "trending_movies_and_shows".equals(kioskId)
-                    || "trending_podcasts_episodes".equals(kioskId);
+            final Tab.KioskTab kioskTab = (Tab.KioskTab) tab;
+            return !ForkContentPolicy.isAllowedKiosk(
+                    kioskTab.getKioskServiceId(),
+                    kioskTab.getKioskId()
+            );
+        }
+
+        if (tab instanceof Tab.ChannelTab) {
+            return !ForkContentPolicy.isAllowedService(
+                    ((Tab.ChannelTab) tab).getChannelServiceId()
+            );
+        }
+
+        if (tab instanceof Tab.PlaylistTab) {
+            final Tab.PlaylistTab playlistTab = (Tab.PlaylistTab) tab;
+            return playlistTab.getPlaylistServiceId() >= 0
+                    && !ForkContentPolicy.isAllowedService(playlistTab.getPlaylistServiceId());
         }
 
         return false;
