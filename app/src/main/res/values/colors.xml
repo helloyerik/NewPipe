@@ -10,7 +10,7 @@
     <color name="placeholder_foreground">#6C6C6C</color>
 
     <!-- Light Theme -->
-    <color name="light_background_color">#FFF7FAFC</color>
+    <color name="light_background_color">@color/white</color>
     <color name="light_dialog_background_color">#FFF7FAFC</color>
     <color name="light_settings_accent_color">#000000</color>
     <color name="light_separator_color">#2403343A</color>

@@ -131,23 +131,15 @@ public final class ThemeHelper {
         final String selectedThemeKey = getSelectedThemeKey(context);
 
 
-        int baseTheme = R.style.DarkTheme; // default to dark theme
+        int baseTheme = R.style.BlackTheme;
         if (selectedThemeKey.equals(lightThemeKey)) {
             baseTheme = R.style.LightTheme;
         } else if (selectedThemeKey.equals(blackThemeKey)) {
             baseTheme = R.style.BlackTheme;
         } else if (selectedThemeKey.equals(automaticDeviceThemeKey)) {
-
             if (isDeviceDarkThemeEnabled(context)) {
-                // use the dark theme variant preferred by the user
-                final String selectedNightThemeKey = getSelectedNightThemeKey(context);
-                if (selectedNightThemeKey.equals(blackThemeKey)) {
-                    baseTheme = R.style.BlackTheme;
-                } else {
-                    baseTheme = R.style.DarkTheme;
-                }
+                baseTheme = R.style.BlackTheme;
             } else {
-                // there is only one day theme
                 baseTheme = R.style.LightTheme;
             }
         }
@@ -163,11 +155,9 @@ public final class ThemeHelper {
             return baseTheme;
         }
 
-        String themeName = "DarkTheme"; // default
+        String themeName = "BlackTheme";
         if (baseTheme == R.style.LightTheme) {
             themeName = "LightTheme";
-        } else if (baseTheme == R.style.BlackTheme) {
-            themeName = "BlackTheme";
         }
 
         themeName += "." + service.getServiceInfo().getName();
@@ -196,20 +186,12 @@ public final class ThemeHelper {
             return R.style.BlackSettingsTheme;
         } else if (selectedTheme.equals(automaticDeviceTheme)) {
             if (isDeviceDarkThemeEnabled(context)) {
-                // use the dark theme variant preferred by the user
-                final String selectedNightTheme = getSelectedNightThemeKey(context);
-                if (selectedNightTheme.equals(blackTheme)) {
-                    return R.style.BlackSettingsTheme;
-                } else {
-                    return R.style.DarkSettingsTheme;
-                }
+                return R.style.BlackSettingsTheme;
             } else {
-                // there is only one day theme
                 return R.style.LightSettingsTheme;
             }
         } else {
-            // default to dark theme
-            return R.style.DarkSettingsTheme;
+            return R.style.BlackSettingsTheme;
         }
     }
 
@@ -264,16 +246,31 @@ public final class ThemeHelper {
     private static String getSelectedThemeKey(final Context context) {
         final String themeKey = context.getString(R.string.theme_key);
         final String defaultTheme = context.getString(R.string.default_theme_value);
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(themeKey, defaultTheme);
+        return normalizeThemePreferenceValue(context,
+                themeKey,
+                PreferenceManager.getDefaultSharedPreferences(context)
+                        .getString(themeKey, defaultTheme),
+                defaultTheme);
     }
 
-    private static String getSelectedNightThemeKey(final Context context) {
-        final String nightThemeKey = context.getString(R.string.night_theme_key);
-        final String defaultNightTheme = context.getResources()
-                .getString(R.string.default_night_theme_value);
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(nightThemeKey, defaultNightTheme);
+    private static String normalizeThemePreferenceValue(final Context context,
+                                                        final String preferenceKey,
+                                                        @Nullable final String selectedThemeKey,
+                                                        final String defaultTheme) {
+        final String darkThemeKey = context.getString(R.string.dark_theme_key);
+        final String blackThemeKey = context.getString(R.string.black_theme_key);
+        final String normalizedThemeKey =
+                selectedThemeKey == null ? defaultTheme : selectedThemeKey;
+
+        if (normalizedThemeKey.equals(darkThemeKey)) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(preferenceKey, blackThemeKey)
+                    .apply();
+            return blackThemeKey;
+        }
+
+        return normalizedThemeKey;
     }
 
     /**
@@ -322,11 +319,14 @@ public final class ThemeHelper {
 
     public static void setDayNightMode(final Context context, final String selectedThemeKey) {
         final Resources res = context.getResources();
+        final String normalizedThemeKey = normalizeThemePreferenceValue(context,
+                context.getString(R.string.theme_key),
+                selectedThemeKey,
+                context.getString(R.string.default_theme_value));
 
-        if (selectedThemeKey.equals(res.getString(R.string.light_theme_key))) {
+        if (normalizedThemeKey.equals(res.getString(R.string.light_theme_key))) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        } else if (selectedThemeKey.equals(res.getString(R.string.dark_theme_key))
-                || selectedThemeKey.equals(res.getString(R.string.black_theme_key))) {
+        } else if (normalizedThemeKey.equals(res.getString(R.string.black_theme_key))) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);

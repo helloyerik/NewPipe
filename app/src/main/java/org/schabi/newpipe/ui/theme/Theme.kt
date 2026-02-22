@@ -90,16 +90,14 @@ private val blackScheme = darkScheme.copy(surface = Color.Black)
 @Composable
 fun AppTheme(useDarkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(LocalContext.current)
-    val theme = sharedPreferences.getString("theme", "auto_device_theme")
-    val nightTheme = sharedPreferences.getString("night_theme", "dark_theme")
+    val rawTheme = sharedPreferences.getString("theme", "auto_device_theme")
+    val theme = if (rawTheme == "dark_theme") "black_theme" else rawTheme
 
     MaterialTheme(
-        colorScheme = if (!useDarkTheme) {
-            lightScheme
-        } else if (theme == "black_theme" || nightTheme == "black_theme") {
-            blackScheme
-        } else {
-            darkScheme
+        colorScheme = when (theme) {
+            "light_theme" -> lightScheme
+            "black_theme" -> blackScheme
+            else -> if (useDarkTheme) blackScheme else lightScheme
         },
         content = content
     )
