@@ -107,10 +107,9 @@ public final class NotificationUtil {
             mediaStyle.setMediaSession(ui.getSessionToken());
         }
 
-        // setup notification builder
+        // setup notification builder with inverted colors (no colorization for clean look)
         final var builder = setupNotificationBuilder(player.getContext(), mediaStyle)
-                .setColorized(player.getPrefs().getBoolean(
-                        player.getContext().getString(R.string.notification_colorize_key), true));
+                .setColorized(false);
 
         // set the initial value for the video thumbnail, updatable with updateNotificationThumbnail
         setLargeIcon(builder);
@@ -290,23 +289,8 @@ public final class NotificationUtil {
     /////////////////////////////////////////////////////
 
     private void setLargeIcon(final NotificationCompat.Builder builder) {
-        final boolean showThumbnail = player.getPrefs().getBoolean(
-                player.getContext().getString(R.string.show_thumbnail_key), true);
-        final Bitmap thumbnail = player.getThumbnail();
-        if (thumbnail == null || !showThumbnail) {
-            // since the builder is reused, make sure the thumbnail is unset if there is not one
-            builder.setLargeIcon((Bitmap) null);
-            return;
-        }
-
-        final boolean scaleImageToSquareAspectRatio = player.getPrefs().getBoolean(
-                player.getContext().getString(R.string.scale_to_square_image_in_notifications_key),
-                false);
-        if (scaleImageToSquareAspectRatio) {
-            builder.setLargeIcon(getBitmapWithSquareAspectRatio(thumbnail));
-        } else {
-            builder.setLargeIcon(thumbnail);
-        }
+        // Always hide thumbnail in background mode for clean minimal notification
+        builder.setLargeIcon((Bitmap) null);
     }
 
     private Bitmap getBitmapWithSquareAspectRatio(@NonNull final Bitmap bitmap) {

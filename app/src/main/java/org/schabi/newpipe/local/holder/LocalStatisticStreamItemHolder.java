@@ -71,11 +71,9 @@ public class LocalStatisticStreamItemHolder extends LocalItemHolder {
 
     private String getStreamInfoDetailLine(final StreamStatisticsEntry entry,
                                            final DateTimeFormatter dateTimeFormatter) {
+        // Only show date and service name, no watch count
         return Localization.concatenateStrings(
-                // watchCount
-                Localization.shortViewCount(itemBuilder.getContext(), entry.getWatchCount()),
                 dateTimeFormatter.format(entry.getLatestAccessDate()),
-                // serviceName
                 ServiceHelper.getNameOfServiceById(entry.getStreamEntity().getServiceId()));
     }
 

@@ -171,9 +171,7 @@
                         android:id="@+id/detail_video_title_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginEnd="30dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
+                        android:layout_marginEnd="12dp"
                         android:paddingTop="12dp"
                         android:paddingBottom="8dp"
                         android:textAppearance="?android:attr/textAppearanceLarge"
@@ -188,6 +186,7 @@
                         android:layout_marginTop="11dp"
                         android:layout_marginEnd="10dp"
                         android:src="@drawable/ic_expand_more"
+                        android:visibility="gone"
                         tools:ignore="ContentDescription" />
 
                 </FrameLayout>
