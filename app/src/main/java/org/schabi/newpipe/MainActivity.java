@@ -805,7 +805,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Get the most recent history entry
                 final java.util.List<org.schabi.newpipe.database.history.model.StreamHistoryEntry> history =
-                        historyManager.getStreamHistory().blockingFirst();
+                        historyManager.getStreamHistorySortedById().blockingFirst();
 
                 if (history != null && !history.isEmpty()) {
                     final org.schabi.newpipe.database.history.model.StreamHistoryEntry lastEntry = history.get(0);
