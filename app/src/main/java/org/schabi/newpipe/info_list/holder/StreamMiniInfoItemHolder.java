@@ -1,11 +1,13 @@
 package org.schabi.newpipe.info_list.holder;
 
+import android.content.SharedPreferences;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import org.schabi.newpipe.R;
 import org.schabi.newpipe.database.stream.model.StreamStateEntity;
@@ -86,7 +88,17 @@ public class StreamMiniInfoItemHolder extends InfoItemHolder {
         }
 
         // Default thumbnail is shown on error, while loading and if the url is empty
-        CoilHelper.INSTANCE.loadThumbnail(itemThumbnailView, item.getThumbnails());
+        // Check preference to show/hide thumbnails
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(itemBuilder.getContext());
+        final boolean showThumbnails = prefs.getBoolean(
+            itemBuilder.getContext().getString(R.string.show_video_thumbnails_key), false);
+
+        if (showThumbnails) {
+            itemThumbnailView.setVisibility(View.VISIBLE);
+            CoilHelper.INSTANCE.loadThumbnail(itemThumbnailView, item.getThumbnails());
+        } else {
+            itemThumbnailView.setVisibility(View.GONE);
+        }
 
         itemView.setOnClickListener(view -> {
             if (itemBuilder.getOnStreamSelectedListener() != null) {

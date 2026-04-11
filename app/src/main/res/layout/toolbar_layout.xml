@@ -10,10 +10,10 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/white"
+        android:background="?attr/windowBackground"
         android:gravity="center_vertical"
         android:minHeight="?attr/actionBarSize"
-        android:theme="@style/WhiteHeaderToolbarTheme">
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
 
         <include
             android:id="@+id/toolbar_search_container"

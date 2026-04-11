@@ -137,6 +137,12 @@
     <string name="autoplay_title">Autoplay</string>
     <string name="show_hold_to_append_title">Show \"Hold to enqueue\" tip</string>
     <string name="show_hold_to_append_summary">Show tip when pressing the background or the popup button in video \"Details:\"</string>
+    <string name="show_video_thumbnails_title">Show video thumbnails</string>
+    <string name="show_video_thumbnails_summary">Display video preview images in feeds and lists</string>
+    <string name="auto_resume_on_launch_title">Auto-resume last video on launch</string>
+    <string name="auto_resume_on_launch_summary">Automatically continue playing the last watched video when app opens</string>
+    <string name="app_font_title">App font</string>
+    <string name="app_font_summary">Choose the font style for the app</string>
     <string name="unsupported_url">Unsupported URL</string>
     <string name="unsupported_url_dialog_message">Could not recognize the URL. Open with another app?</string>
     <string name="default_content_country_title">Default content country</string>

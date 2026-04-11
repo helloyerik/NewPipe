@@ -1509,4 +1509,22 @@
         <item>@string/image_quality_medium_key</item>
         <item>@string/image_quality_high_key</item>
     </string-array>
+
+    <!-- Show video previews/thumbnails -->
+    <string name="show_video_thumbnails_key">show_video_thumbnails</string>
+
+    <!-- Auto-resume last video on app launch -->
+    <string name="auto_resume_on_launch_key">auto_resume_on_launch</string>
+
+    <!-- App Font -->
+    <string name="app_font_key">app_font</string>
+    <string name="app_font_default_value">system</string>
+    <string-array name="app_font_entries">
+        <item>System Font</item>
+        <item>Inter</item>
+    </string-array>
+    <string-array name="app_font_values">
+        <item>system</item>
+        <item>inter</item>
+    </string-array>
 </resources>

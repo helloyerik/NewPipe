@@ -188,6 +188,14 @@
             app:singleLineTitle="false"
             app:iconSpaceReserved="false" />
 
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="@string/auto_resume_on_launch_key"
+            android:summary="@string/auto_resume_on_launch_summary"
+            android:title="@string/auto_resume_on_launch_title"
+            app:singleLineTitle="false"
+            app:iconSpaceReserved="false" />
+
         <ListPreference
             android:defaultValue="@string/default_left_gesture_control_value"
             android:entries="@array/left_gesture_control_description"

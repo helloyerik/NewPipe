@@ -24,9 +24,7 @@ import com.xwray.groupie.Section
 import com.xwray.groupie.viewbinding.GroupieViewHolder
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import org.schabi.newpipe.R
-import org.schabi.newpipe.database.feed.model.FeedGroupEntity.Companion.GROUP_ALL_ID
 import org.schabi.newpipe.databinding.DialogTitleBinding
-import org.schabi.newpipe.databinding.FeedItemCarouselBinding
 import org.schabi.newpipe.databinding.FragmentSubscriptionBinding
 import org.schabi.newpipe.error.ErrorInfo
 import org.schabi.newpipe.error.UserAction
@@ -35,16 +33,7 @@ import org.schabi.newpipe.extractor.channel.ChannelInfoItem
 import org.schabi.newpipe.fragments.BaseStateFragment
 import org.schabi.newpipe.ktx.animate
 import org.schabi.newpipe.local.subscription.SubscriptionViewModel.SubscriptionState
-import org.schabi.newpipe.local.subscription.dialog.FeedGroupDialog
-import org.schabi.newpipe.local.subscription.dialog.FeedGroupReorderDialog
 import org.schabi.newpipe.local.subscription.item.ChannelItem
-import org.schabi.newpipe.local.subscription.item.FeedGroupAddNewGridItem
-import org.schabi.newpipe.local.subscription.item.FeedGroupAddNewItem
-import org.schabi.newpipe.local.subscription.item.FeedGroupCardGridItem
-import org.schabi.newpipe.local.subscription.item.FeedGroupCardItem
-import org.schabi.newpipe.local.subscription.item.FeedGroupCarouselItem
-import org.schabi.newpipe.local.subscription.item.GroupsHeader
-import org.schabi.newpipe.local.subscription.item.Header
 import org.schabi.newpipe.local.subscription.item.ImportSubscriptionsHintPlaceholderItem
 import org.schabi.newpipe.ui.emptystate.setEmptyStateComposable
 import org.schabi.newpipe.util.NavigationHelper
@@ -62,19 +51,12 @@ class SubscriptionFragment : BaseStateFragment<SubscriptionState>() {
     private lateinit var importExportHelper: SubscriptionsImportExportHelper
     private val disposables: CompositeDisposable = CompositeDisposable()
 
-    private val groupAdapter = GroupAdapter<GroupieViewHolder<FeedItemCarouselBinding>>()
-    private lateinit var carouselAdapter: GroupAdapter<GroupieViewHolder<FeedItemCarouselBinding>>
-    private lateinit var feedGroupsCarousel: FeedGroupCarouselItem
-    private lateinit var feedGroupsSortMenuItem: GroupsHeader
+    private val groupAdapter = GroupAdapter<GroupieViewHolder<*>>()
     private val subscriptionsSection = Section()
 
     @State
     @JvmField
     var itemsListState: Parcelable? = null
-
-    @State
-    @JvmField
-    var feedGroupsCarouselState: Parcelable? = null
 
     init {
         setHasOptionsMenu(true)
@@ -97,7 +79,6 @@ class SubscriptionFragment : BaseStateFragment<SubscriptionState>() {
     override fun onPause() {
         super.onPause()
         itemsListState = binding.itemsList.layoutManager?.onSaveInstanceState()
-        feedGroupsCarouselState = feedGroupsCarousel.onSaveInstanceState()
     }
 
     override fun onDestroyView() {
@@ -179,10 +160,6 @@ class SubscriptionFragment : BaseStateFragment<SubscriptionState>() {
         NavigationHelper.openSubscriptionsImportFragment(fragmentManager, serviceId)
     }
 
-    private fun openReorderDialog() {
-        FeedGroupReorderDialog().show(parentFragmentManager, null)
-    }
-
     // ////////////////////////////////////////////////////////////////////////
     // Fragment Views
     // ////////////////////////////////////////////////////////////////////////
@@ -202,81 +179,16 @@ class SubscriptionFragment : BaseStateFragment<SubscriptionState>() {
 
         viewModel = ViewModelProvider(this)[SubscriptionViewModel::class.java]
         viewModel.stateLiveData.observe(viewLifecycleOwner) { it?.let(this::handleResult) }
-        viewModel.feedGroupsLiveData.observe(viewLifecycleOwner) {
-            it?.let { (groups, listViewMode) ->
-                handleFeedGroups(groups, listViewMode)
-            }
-        }
 
         setupInitialLayout()
     }
 
     private fun setupInitialLayout() {
-        Section().apply {
-            carouselAdapter = GroupAdapter<GroupieViewHolder<FeedItemCarouselBinding>>()
-
-            carouselAdapter.setOnItemClickListener { item, _ ->
-                when (item) {
-                    is FeedGroupCardItem ->
-                        NavigationHelper.openFeedFragment(fm, item.groupId, item.name)
-
-                    is FeedGroupCardGridItem ->
-                        NavigationHelper.openFeedFragment(fm, item.groupId, item.name)
-
-                    is FeedGroupAddNewItem ->
-                        FeedGroupDialog.newInstance().show(fm, null)
-
-                    is FeedGroupAddNewGridItem ->
-                        FeedGroupDialog.newInstance().show(fm, null)
-                }
-            }
-            carouselAdapter.setOnItemLongClickListener { item, _ ->
-                if ((item is FeedGroupCardItem && item.groupId == GROUP_ALL_ID) ||
-                    (item is FeedGroupCardGridItem && item.groupId == GROUP_ALL_ID)
-                ) {
-                    return@setOnItemLongClickListener false
-                }
-
-                when (item) {
-                    is FeedGroupCardItem ->
-                        FeedGroupDialog.newInstance(item.groupId).show(fm, null)
-
-                    is FeedGroupCardGridItem ->
-                        FeedGroupDialog.newInstance(item.groupId).show(fm, null)
-                }
-                return@setOnItemLongClickListener true
-            }
-
-            feedGroupsCarousel = FeedGroupCarouselItem(
-                carouselAdapter = carouselAdapter,
-                listViewMode = viewModel.getListViewMode()
-            )
-
-            feedGroupsSortMenuItem = GroupsHeader(
-                title = getString(R.string.feed_groups_header_title),
-                onSortClicked = ::openReorderDialog,
-                onToggleListViewModeClicked = ::toggleListViewMode,
-                listViewMode = viewModel.getListViewMode()
-            )
-
-            add(Section(feedGroupsSortMenuItem, listOf(feedGroupsCarousel)))
-            groupAdapter.clear()
-            groupAdapter.add(this)
-        }
-
         subscriptionsSection.setPlaceholder(ImportSubscriptionsHintPlaceholderItem())
         subscriptionsSection.setHideWhenEmpty(true)
 
-        groupAdapter.add(
-            Section(
-                Header(getString(R.string.tab_subscriptions)),
-                listOf(subscriptionsSection)
-            )
-        )
-    }
-
-    private fun toggleListViewMode() {
-        viewModel.setListViewMode(!viewModel.getListViewMode())
+        groupAdapter.clear()
+        groupAdapter.add(subscriptionsSection)
     }
 
     private fun showLongTapDialog(selectedItem: ChannelInfoItem) {
@@ -363,40 +275,6 @@ class SubscriptionFragment : BaseStateFragment<SubscriptionState>() {
                 result.error?.let {
                     showError(ErrorInfo(result.error, UserAction.SOMETHING_ELSE, "Subscriptions"))
                 }
-            }
-        }
-    }
-
-    private fun handleFeedGroups(groups: List<Group>, listViewMode: Boolean) {
-        if (feedGroupsCarouselState != null) {
-            feedGroupsCarousel.onRestoreInstanceState(feedGroupsCarouselState)
-            feedGroupsCarouselState = null
-        }
-
-        binding.itemsList.post {
-            if (context == null) {
-                // since this part was posted to the next UI cycle, the fragment might have been
-                // removed in the meantime
-                return@post
-            }
-
-            feedGroupsCarousel.listViewMode = listViewMode
-            feedGroupsSortMenuItem.showSortButton = groups.size > 1
-            feedGroupsSortMenuItem.listViewMode = listViewMode
-            feedGroupsCarousel.notifyChanged(FeedGroupCarouselItem.PAYLOAD_UPDATE_LIST_VIEW_MODE)
-            feedGroupsSortMenuItem.notifyChanged(GroupsHeader.PAYLOAD_UPDATE_ICONS)
-
-            // update items here to prevent flickering
-            carouselAdapter.apply {
-                clear()
-                if (listViewMode) {
-                    add(FeedGroupAddNewItem())
-                    add(FeedGroupCardItem(GROUP_ALL_ID, getString(R.string.all), FeedGroupIcon.WHATS_NEW))
-                } else {
-                    add(FeedGroupAddNewGridItem())
-                    add(FeedGroupCardGridItem(GROUP_ALL_ID, getString(R.string.all), FeedGroupIcon.WHATS_NEW))
-                }
-                addAll(groups)
             }
         }
     }

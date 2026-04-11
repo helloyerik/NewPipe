@@ -330,6 +330,7 @@
                                 android:lines="1"
                                 android:textAppearance="?android:attr/textAppearanceLarge"
                                 android:textSize="@dimen/video_item_detail_views_text_size"
+                                android:visibility="gone"
                                 tools:ignore="RtlHardcoded"
                                 tools:text="2,816,821,505 views" />
 
@@ -339,7 +340,8 @@
                                 android:layout_height="@dimen/video_item_detail_like_image_height"
                                 android:layout_below="@id/detail_view_count_view"
                                 android:contentDescription="@string/detail_likes_img_view_description"
-                                android:src="@drawable/ic_thumb_up" />
+                                android:src="@drawable/ic_thumb_up"
+                                android:visibility="gone" />
 
                             <org.schabi.newpipe.views.NewPipeTextView
                                 android:id="@+id/detail_thumbs_up_count_view"
@@ -352,6 +354,7 @@
                                 android:lines="1"
                                 android:textAppearance="?android:attr/textAppearanceMedium"
                                 android:textSize="@dimen/video_item_detail_likes_text_size"
+                                android:visibility="gone"
                                 tools:ignore="RtlHardcoded"
                                 tools:text="12M" />
 
@@ -364,6 +367,7 @@
                                 android:layout_toRightOf="@id/detail_thumbs_up_count_view"
                                 android:contentDescription="@string/detail_dislikes_img_view_description"
                                 android:src="@drawable/ic_thumb_down"
+                                android:visibility="gone"
                                 tools:ignore="RtlHardcoded" />
 
                             <org.schabi.newpipe.views.NewPipeTextView
@@ -377,6 +381,7 @@
                                 android:lines="1"
                                 android:textAppearance="?android:attr/textAppearanceMedium"
                                 android:textSize="@dimen/video_item_detail_likes_text_size"
+                                android:visibility="gone"
                                 tools:ignore="RtlHardcoded"
                                 tools:text="10K" />
 

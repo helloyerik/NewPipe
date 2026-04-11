@@ -819,6 +819,13 @@ class VideoDetailFragment :
         tabIcons.clear()
         tabContentDescriptions.clear()
 
+        if (showDescription) {
+            // temp empty fragment. will be updated in handleResult
+            pageAdapter.addFragment(EmptyFragment.newInstance(false), DESCRIPTION_TAB_TAG)
+            tabIcons.add(R.drawable.ic_description)
+            tabContentDescriptions.add(R.string.description_tab_description)
+        }
+
         if (shouldShowComments()) {
             pageAdapter.addFragment(getInstance(serviceId, url), COMMENTS_TAB_TAG)
             tabIcons.add(R.drawable.ic_comment)
@@ -830,13 +837,6 @@ class VideoDetailFragment :
             pageAdapter.addFragment(EmptyFragment.newInstance(false), RELATED_TAB_TAG)
             tabIcons.add(R.drawable.ic_art_track)
             tabContentDescriptions.add(R.string.related_items_tab_description)
-        }
-
-        if (showDescription) {
-            // temp empty fragment. will be updated in handleResult
-            pageAdapter.addFragment(EmptyFragment.newInstance(false), DESCRIPTION_TAB_TAG)
-            tabIcons.add(R.drawable.ic_description)
-            tabContentDescriptions.add(R.string.description_tab_description)
         }
 
         if (pageAdapter.count == 0) {
@@ -1532,13 +1532,7 @@ class VideoDetailFragment :
         binding.detailSubChannelTextView.visibility = View.VISIBLE
         binding.detailSubChannelTextView.setSelected(true)
 
-        if (info.uploaderSubscriberCount > -1) {
-            binding.detailUploaderTextView.text =
-                Localization.shortSubscriberCount(activity, info.uploaderSubscriberCount)
-            binding.detailUploaderTextView.visibility = View.VISIBLE
-        } else {
-            binding.detailUploaderTextView.visibility = View.GONE
-        }
+        binding.detailUploaderTextView.visibility = View.GONE
 
         CoilHelper.loadAvatar(binding.detailSubChannelThumbnailView, info.uploaderAvatars)
         binding.detailSubChannelThumbnailView.visibility = View.VISIBLE
@@ -1553,14 +1547,6 @@ class VideoDetailFragment :
         val subText = StringBuilder()
         if (info.uploaderName.isNotEmpty()) {
             subText.append(getString(R.string.video_detail_by, info.uploaderName))
-        }
-        if (info.uploaderSubscriberCount > -1) {
-            if (subText.isNotEmpty()) {
-                subText.append(Localization.DOT_SEPARATOR)
-            }
-            subText.append(
-                Localization.shortSubscriberCount(activity, info.uploaderSubscriberCount)
-            )
         }
 
         if (subText.isEmpty()) {

@@ -179,6 +179,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         MigrationManager.showUserInfoIfPresent(this);
+
+        // Auto-resume last video if enabled
+        autoResumeLastVideo();
     }
 
     @Override
@@ -783,6 +786,44 @@ public class MainActivity extends AppCompatActivity {
         final int sheetState = bottomSheetBehavior.getState();
         return sheetState == BottomSheetBehavior.STATE_HIDDEN
                 || sheetState == BottomSheetBehavior.STATE_COLLAPSED;
+    }
+
+    private void autoResumeLastVideo() {
+        // Check if auto-resume is enabled
+        final boolean autoResumeEnabled = sharedPreferences.getBoolean(
+                getString(R.string.auto_resume_on_launch_key), true);
+
+        if (!autoResumeEnabled) {
+            return;
+        }
+
+        // Get the most recent video from watch history in a background thread
+        new Thread(() -> {
+            try {
+                final org.schabi.newpipe.local.history.HistoryRecordManager historyManager =
+                        new org.schabi.newpipe.local.history.HistoryRecordManager(this);
+
+                // Get the most recent history entry
+                final java.util.List<org.schabi.newpipe.database.history.model.StreamHistoryEntry> history =
+                        historyManager.getStreamHistory().blockingFirst();
+
+                if (history != null && !history.isEmpty()) {
+                    final org.schabi.newpipe.database.history.model.StreamHistoryEntry lastEntry = history.get(0);
+                    final org.schabi.newpipe.extractor.stream.StreamInfoItem lastVideo =
+                            lastEntry.toStreamInfoItem();
+
+                    // Resume playback on the main thread
+                    runOnUiThread(() -> {
+                        final org.schabi.newpipe.player.playqueue.SinglePlayQueue playQueue =
+                                new org.schabi.newpipe.player.playqueue.SinglePlayQueue(lastVideo);
+                        NavigationHelper.playOnBackgroundPlayer(this, playQueue, true);
+                    });
+                }
+            } catch (final Exception e) {
+                // Silently fail if there's any error
+                android.util.Log.e("MainActivity", "Error auto-resuming video", e);
+            }
+        }).start();
     }
 
 }

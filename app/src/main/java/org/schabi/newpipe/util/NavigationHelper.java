@@ -96,7 +96,7 @@ public final class NavigationHelper {
                 .orElse(null);
         return new Intent(context, targetClazz)
                 .putExtra(Player.PLAY_QUEUE_KEY, cacheKey)
-                .putExtra(Player.PLAYER_TYPE, PlayerType.MAIN)
+                .putExtra(Player.PLAYER_TYPE, PlayerType.AUDIO)
                 .putExtra(PlayerService.SHOULD_START_FOREGROUND_EXTRA, true)
                 .putExtra(Player.PLAYER_INTENT_TYPE, playerIntentType);
     }
