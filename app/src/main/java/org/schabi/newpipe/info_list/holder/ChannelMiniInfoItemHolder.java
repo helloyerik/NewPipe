@@ -98,18 +98,10 @@ public class ChannelMiniInfoItemHolder extends InfoItemHolder {
 
     @Nullable
     private String getDetailLine(final ChannelInfoItem item) {
-        if (item.getStreamCount() >= 0 && item.getSubscriberCount() >= 0) {
-            return Localization.concatenateStrings(
-                    Localization.shortSubscriberCount(itemBuilder.getContext(),
-                            item.getSubscriberCount()),
-                    Localization.localizeStreamCount(itemBuilder.getContext(),
-                            item.getStreamCount()));
-        } else if (item.getStreamCount() >= 0) {
+        // Only show video count, not subscriber count
+        if (item.getStreamCount() >= 0) {
             return Localization.localizeStreamCount(itemBuilder.getContext(),
                     item.getStreamCount());
-        } else if (item.getSubscriberCount() >= 0) {
-            return Localization.shortSubscriberCount(itemBuilder.getContext(),
-                    item.getSubscriberCount());
         } else {
             return null;
         }

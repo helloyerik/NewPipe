@@ -60,8 +60,6 @@
         android:layout_alignLeft="@id/itemThumbnailView"
         android:layout_alignEnd="@id/itemThumbnailView"
         android:layout_alignRight="@id/itemThumbnailView"
-        android:ellipsize="end"
-        android:maxLines="2"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textSize="@dimen/video_item_search_title_text_size"
         tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc tristique..." />

@@ -62,8 +62,6 @@
         android:layout_marginStart="@dimen/margin_small"
         android:layout_marginTop="@dimen/spacing_nano"
         android:layout_marginEnd="@dimen/spacing_micro"
-        android:ellipsize="end"
-        android:maxLines="2"
         android:textAppearance="?android:textAppearanceListItem"
         app:layout_constraintEnd_toStartOf="@id/itemHandle"
         app:layout_constraintStart_toStartOf="parent"

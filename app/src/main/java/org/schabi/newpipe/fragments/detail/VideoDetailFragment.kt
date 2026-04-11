@@ -266,7 +266,7 @@ class VideoDetailFragment :
         showDescription = prefs.getBoolean(getString(R.string.show_description_key), true)
         selectedTabTag = prefs.getString(
             getString(R.string.stream_info_selected_tab_key),
-            COMMENTS_TAB_TAG
+            DESCRIPTION_TAB_TAG
         )!!
         prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
 

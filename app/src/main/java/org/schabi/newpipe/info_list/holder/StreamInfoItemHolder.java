@@ -63,31 +63,11 @@ public class StreamInfoItemHolder extends StreamMiniInfoItemHolder {
     }
 
     private String getStreamInfoDetailLine(final StreamInfoItem infoItem) {
-        String viewsAndDate = "";
-        if (infoItem.getViewCount() >= 0) {
-            if (infoItem.getStreamType().equals(StreamType.AUDIO_LIVE_STREAM)) {
-                viewsAndDate = Localization
-                        .listeningCount(itemBuilder.getContext(), infoItem.getViewCount());
-            } else if (infoItem.getStreamType().equals(StreamType.LIVE_STREAM)) {
-                viewsAndDate = Localization
-                        .shortWatchingCount(itemBuilder.getContext(), infoItem.getViewCount());
-            } else {
-                viewsAndDate = Localization
-                        .shortViewCount(itemBuilder.getContext(), infoItem.getViewCount());
-            }
-        }
-
+        // Only show upload date, no view count
         final String uploadDate = Localization.relativeTimeOrTextual(itemBuilder.getContext(),
                 infoItem.getUploadDate(),
                 infoItem.getTextualUploadDate());
-        if (!TextUtils.isEmpty(uploadDate)) {
-            if (viewsAndDate.isEmpty()) {
-                return uploadDate;
-            }
 
-            return Localization.concatenateStrings(viewsAndDate, uploadDate);
-        }
-
-        return viewsAndDate;
+        return uploadDate != null ? uploadDate : "";
     }
 }
